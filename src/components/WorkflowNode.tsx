@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { NodeData, WorkflowNodes, NodeType } from "../hooks/useWorkflow";
+import type { WorkflowNodes, NodeType } from "../hooks/useWorkflow";
 
 interface Props {
   id: string;
@@ -50,7 +50,7 @@ export const WorkflowNode: React.FC<Props> = ({
             +
           </button>
 
-          {/* The Menu (Only shows if menuOpen is true) */}
+          {}
           {menuOpen && (
             <div
               className="popover-menu"
