@@ -136,6 +136,4 @@ src/
 **Yash Malik**
 *Frontend Engineer Intern Applicant*
 
-```
 
-```
