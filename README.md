@@ -1,73 +1,141 @@
-# React + TypeScript + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Workflow Builder UI 🚀
 
-Currently, two official plugins are available:
+A high-performance, interactive visual workflow editor built from scratch. This application allows users to design complex logic trees with Actions and Conditions using a clean, recursive UI.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+**Built as a Frontend Intern Take-Home Assignment.**
 
-## React Compiler
+🔴 **Live Demo:** [https://emitrr-assignment-nine.vercel.app/](https://emitrr-assignment-nine.vercel.app/)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 📋 Project Overview
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+The objective was to engineer a simplified version of tools like **React Flow** or **Zapier**, but **without using any external diagramming or UI libraries**.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Unlike a standard list-based app, this project manages a **Graph Data Structure**, handles recursive component rendering for nested branches, and implements robust state management for features like **Undo/Redo** and **Tree Traversal**.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## ✨ Key Features
+
+### 🎨 Visual Flowcharting
+- **Distinct Node Shapes:** Renders **Start/End** (Ovals), **Actions** (Rectangles), and **Conditions** (Diamonds) using pure CSS.
+- **Recursive Rendering:** Capable of rendering infinite levels of nested branches.
+- **Auto-Branching:** Adding a "Condition" node automatically splits the flow into **"True"** and **"False"** paths.
+
+### 🧠 Smart Interactions
+- **Context-Sensitive Creation:** A custom pop-over menu appears on connection lines to insert nodes exactly where needed.
+- **Auto-Healing Deletion:** Deleting a node intelligently connects its parent to its child, ensuring the workflow flow is never broken.
+- **Inline Editing:** Click any node label to rename it instantly.
+
+### 🏆 Bonus Features Implemented
+- **↺ Undo/Redo System:** Full history stack implementation allows users to travel backward and forward through structural changes.
+- **💾 Save State:** A "Save JSON" button serializes the current tree structure and logs it to the console for persistence testing.
+- **✨ TypeScript Strictness:** Fully typed codebase with `verbatimModuleSyntax` for robust development.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework:** React 18 (Vite)
+- **Language:** **TypeScript** (Strict Mode)
+- **Styling:** Pure CSS3 (CSS Variables, Flexbox, Pseudo-elements for shapes)
+- **State Management:** Custom Hook (`useWorkflow`) with History Stack
+- **Icons:** Native text/CSS shapes (No heavy icon libraries)
+
+---
+
+## 🧠 Architectural Decisions
+
+### 1. Normalized Data Structure (The "Flat" Store)
+Instead of a deeply nested object (which makes updates slow and complex), the state is flattened like a database table.
+```typescript
+// O(1) Lookup Speed
+type WorkflowNodes = Record<string, NodeData>;
+
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+This allows for instant updates and easier logic when moving or deleting nodes.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 2. Recursive Component Pattern
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The UI uses a recursive strategy where `<WorkflowNode />` renders itself for its children. This leverages the DOM's natural layout engine (Flexbox) to handle the tree structure without complex absolute positioning math.
+
+### 3. CSS-Only Shapes
+
+The "Diamond" shape for conditions is created using a rotated `::before` pseudo-element, while the text container remains un-rotated. This ensures the text is always readable without using SVG or Images.
+
+---
+
+## ⚙️ Installation & Running Locally
+
+1. **Clone the repository**
+```bash
+git clone [https://github.com/YashMalik/emitrr-assignment.git](https://github.com/YashMalik/emitrr-assignment.git)
+cd emitrr-assignment
+
+```
+
+
+2. **Install dependencies**
+```bash
+npm install
+
+```
+
+
+3. **Start the development server**
+```bash
+npm run dev
+
+```
+
+
+4. Open `http://localhost:5173` in your browser.
+
+---
+
+## 📂 Project Structure
+
+A clean, modular architecture separating logic from presentation:
+
+```
+src/
+├── components/
+│   ├── NodeCard.tsx       # Handles the Visual Shapes (Diamond/Oval)
+│   ├── AddNodeButton.tsx  # The interactive "+" popover menu
+│   └── WorkflowNode.tsx   # Recursive Logic Component
+├── hooks/
+│   └── useWorkflow.ts     # Core Engine (Undo/Redo, CRUD Logic)
+├── initialData.ts         # Type definitions & Initial State
+├── App.css                # Global Styles & Grid Background
+└── App.tsx                # Main Layout & Toolbar
+
+```
+
+---
+
+## ✅ Assignment Requirements Checklist
+
+| Requirement | Status | Implementation |
+| --- | --- | --- |
+| **No UI Libraries** | ✅ | Pure CSS & HTML |
+| **Data Modeling** | ✅ | Normalized JSON Graph |
+| **Node Types** | ✅ | Start, Action, Branch, End |
+| **Visual Connections** | ✅ | CSS Borders & Layouts |
+| **Add/Delete/Edit** | ✅ | Fully Interactive |
+| **Undo/Redo (Bonus)** | ✅ | History Stack Implemented |
+| **Save to JSON (Bonus)** | ✅ | Console Logging |
+| **Context Menu (Bonus)** | ✅ | Custom Hover Popover |
+
+---
+
+### 👤 Author
+
+**Yash Malik**
+*Frontend Engineer Intern Applicant*
+
+```
+
 ```
