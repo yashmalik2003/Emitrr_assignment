@@ -1,38 +1,21 @@
 import { useState } from "react";
+// ADD 'type' HERE
+import type { WorkflowNodes, NodeType, NodeData } from "../initialData";
+import { initialData } from "../initialData";
 
-// --- TYPES ---
-export type NodeType = "start" | "action" | "condition" | "end";
-
-export interface NodeData {
-  id: string;
-  type: NodeType;
-  label: string;
-  parentId: string | null;
-  children: string[];
-}
-
-export type WorkflowNodes = Record<string, NodeData>;
-
-// --- INITIAL STATE ---
-const INITIAL_NODES: WorkflowNodes = {
-  start: {
-    id: "start",
-    type: "start",
-    label: "Start",
-    parentId: null,
-    children: [],
-  },
-};
+// Re-export types so components can use them from here
+export type { WorkflowNodes, NodeType, NodeData };
 
 export const useWorkflow = () => {
-  // History Stack for Undo/Redo (Bonus Point)
-  const [history, setHistory] = useState<WorkflowNodes[]>([INITIAL_NODES]);
+  // --- STATE: HISTORY STACK FOR UNDO/REDO ---
+  const [history, setHistory] = useState<WorkflowNodes[]>([initialData]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // The current view is always the node set at the current index
   const nodes = history[currentIndex];
 
-  // Helper to commit changes to history
-  const updateNodes = (newNodes: WorkflowNodes) => {
+  // Helper to push new state to history
+  const updateHistory = (newNodes: WorkflowNodes) => {
     const newHistory = history.slice(0, currentIndex + 1);
     newHistory.push(newNodes);
     setHistory(newHistory);
@@ -42,23 +25,46 @@ export const useWorkflow = () => {
   // --- ACTIONS ---
 
   const addNode = (parentId: string, type: NodeType) => {
-    const newId = crypto.randomUUID();
+    const newId = Math.random().toString(36).substr(2, 9);
     const parent = nodes[parentId];
 
-    // Create the new node
     const newNode: NodeData = {
       id: newId,
       type,
       label:
-        type === "condition" ? "Condition" : type === "end" ? "End" : "Action",
+        type === "condition"
+          ? "Condition Check"
+          : type === "end"
+          ? "End"
+          : "New Action",
       parentId: parentId,
       children: [],
     };
 
-    const nextNodes = { ...nodes, [newId]: newNode };
+    let nextNodes = { ...nodes, [newId]: newNode };
 
-    // Logic: Insert into flow (Requirement: Maintain Continuous Flow)
-    if (parent.children.length > 0 && type !== "condition") {
+    // Bonus: Auto-create branches for conditions
+    if (type === "condition") {
+      const trueId = Math.random().toString(36).substr(2, 9);
+      const falseId = Math.random().toString(36).substr(2, 9);
+
+      nextNodes[trueId] = {
+        id: trueId,
+        type: "placeholder",
+        label: "True",
+        parentId: newId,
+        children: [],
+      };
+      nextNodes[falseId] = {
+        id: falseId,
+        type: "placeholder",
+        label: "False",
+        parentId: newId,
+        children: [],
+      };
+      newNode.children = [trueId, falseId];
+    } else if (parent.children.length > 0) {
+      // Insert in between
       const existingChildId = parent.children[0];
       newNode.children = [existingChildId];
       nextNodes[existingChildId] = {
@@ -67,8 +73,8 @@ export const useWorkflow = () => {
       };
     }
 
-    // Update parent to point to new node
-    if (parent.type === "condition") {
+    // Update Parent
+    if (parent.type === "condition" || parent.type === "placeholder") {
       nextNodes[parentId] = {
         ...parent,
         children: [...parent.children, newId],
@@ -77,21 +83,19 @@ export const useWorkflow = () => {
       nextNodes[parentId] = { ...parent, children: [newId] };
     }
 
-    updateNodes(nextNodes);
+    updateHistory(nextNodes);
   };
 
   const deleteNode = (nodeId: string) => {
-    if (nodeId === "start") return; // Cannot delete root
-
+    if (nodeId === "start") return;
     const node = nodes[nodeId];
     const parent = nodes[node.parentId!];
     const nextNodes = { ...nodes };
 
-    // Reconnect Logic: Parent adopts the deleted node's first child
+    // Smart Reconnect Logic
     const childToKeep = node.children[0];
-
-    // Update parent's children array
     const newParentChildren = parent.children.filter((id) => id !== nodeId);
+
     if (childToKeep) {
       newParentChildren.push(childToKeep);
       nextNodes[childToKeep] = {
@@ -102,25 +106,31 @@ export const useWorkflow = () => {
 
     nextNodes[parent.id] = { ...parent, children: newParentChildren };
     delete nextNodes[nodeId];
-
-    updateNodes(nextNodes);
+    updateHistory(nextNodes);
   };
 
   const updateLabel = (id: string, newLabel: string) => {
-    const nextNodes = { ...nodes };
-    nextNodes[id] = { ...nextNodes[id], label: newLabel };
-    updateNodes(nextNodes);
+    const nextNodes = { ...nodes, [id]: { ...nodes[id], label: newLabel } };
+    updateHistory(nextNodes);
   };
 
-  // Bonus: Undo/Redo
-  const undo = () => currentIndex > 0 && setCurrentIndex((curr) => curr - 1);
-  const redo = () =>
-    currentIndex < history.length - 1 && setCurrentIndex((curr) => curr + 1);
+  // --- BONUS FEATURES IMPLEMENTATION ---
 
-  // Bonus: Save
+  const undo = () => {
+    if (currentIndex > 0) setCurrentIndex((prev) => prev - 1);
+  };
+
+  const redo = () => {
+    if (currentIndex < history.length - 1) setCurrentIndex((prev) => prev + 1);
+  };
+
   const saveWorkflow = () => {
-    console.log("Workflow Saved:", JSON.stringify(nodes, null, 2));
-    alert("Workflow Data logged to console (F12)!");
+    console.log(
+      "%c Workflow Saved! ",
+      "background: #222; color: #bada55",
+      JSON.stringify(nodes, null, 2)
+    );
+    alert("Workflow structure saved to Console (F12)!");
   };
 
   return {

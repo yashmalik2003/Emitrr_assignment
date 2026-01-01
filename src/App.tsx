@@ -1,6 +1,6 @@
 import { useWorkflow } from "./hooks/useWorkflow";
 import { WorkflowNode } from "./components/WorkflowNode";
-import "./App.css";
+import "./App.css"; // <--- THIS IMPORT IS CRITICAL
 
 function App() {
   const {
@@ -17,7 +17,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* 1. Floating Top Toolbar */}
       <div className="toolbar">
         <button onClick={undo} disabled={!canUndo}>
           ↩ Undo
@@ -25,12 +24,12 @@ function App() {
         <button onClick={redo} disabled={!canRedo}>
           Redo ↪
         </button>
+        <div style={{ width: 1, height: 20, background: "#e2e8f0" }}></div>
         <button onClick={saveWorkflow} className="save-btn">
           Save JSON
         </button>
       </div>
 
-      {/* 2. Canvas Area */}
       <div className="canvas">
         <WorkflowNode
           id="start"
@@ -41,10 +40,8 @@ function App() {
         />
       </div>
 
-      {/* 3. Floating Bottom Footer (Name) */}
       <div className="footer-badge">
-        <span>Developed by</span>
-        <strong>Yash Malik (22BCE11191)</strong>
+        Developed by <strong>Yash Malik</strong>
       </div>
     </div>
   );

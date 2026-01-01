@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import type { WorkflowNodes, NodeType } from "../hooks/useWorkflow";
+import { NodeCard } from "./NodeCard";
+import { AddNodeButton } from "./AddNodeButton";
 
 interface Props {
   id: string;
@@ -17,75 +19,26 @@ export const WorkflowNode: React.FC<Props> = ({
   onEdit,
 }) => {
   const node = nodes[id];
-  const [menuOpen, setMenuOpen] = useState(false);
-
   if (!node) return null;
 
   return (
-    <div className="node-wrapper">
-      {/* 1. The Node Card */}
-      <div className={`node-card type-${node.type}`}>
-        <input
-          value={node.label}
-          onChange={(e) => onEdit(id, e.target.value)}
-          readOnly={node.type === "start"}
-        />
-        {node.type !== "start" && (
-          <div className="delete-btn" onClick={() => onDelete(id)}>
-            ✕
-          </div>
-        )}
-      </div>
+    <div
+      className={`node-wrapper ${
+        node.type === "placeholder" ? "placeholder-wrapper" : ""
+      }`}
+    >
+      {/* Render the Card (or True/False Label) */}
+      {node.type !== "placeholder" && (
+        <div className="line-down top-line"></div>
+      )}
+      <NodeCard node={node} onDelete={onDelete} onEdit={onEdit} />
 
-      {/* 2. Interactive + Button with Pop-over Menu */}
+      {/* Render Add Button if leaf node */}
       {node.children.length === 0 && node.type !== "end" && (
-        <div className="add-connection">
-          <div className="line-fragment"></div>
-
-          {/* The Plus Button */}
-          <button
-            className="add-trigger"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            +
-          </button>
-
-          {}
-          {menuOpen && (
-            <div
-              className="popover-menu"
-              onMouseLeave={() => setMenuOpen(false)}
-            >
-              <button
-                onClick={() => {
-                  onAdd(id, "action");
-                  setMenuOpen(false);
-                }}
-              >
-                Add Action Step
-              </button>
-              <button
-                onClick={() => {
-                  onAdd(id, "condition");
-                  setMenuOpen(false);
-                }}
-              >
-                Add Condition (Branch)
-              </button>
-              <button
-                onClick={() => {
-                  onAdd(id, "end");
-                  setMenuOpen(false);
-                }}
-              >
-                End Workflow
-              </button>
-            </div>
-          )}
-        </div>
+        <AddNodeButton parentId={id} onAdd={onAdd} />
       )}
 
-      {/* 3. Children Rendering */}
+      {/* Recursive Children */}
       {node.children.length > 0 && (
         <>
           <div className="line-down"></div>
@@ -97,17 +50,15 @@ export const WorkflowNode: React.FC<Props> = ({
             {node.type === "condition" && node.children.length > 1 && (
               <div className="branch-bar"></div>
             )}
-
             {node.children.map((childId) => (
-              <div key={childId} className="child-wrapper">
-                <WorkflowNode
-                  id={childId}
-                  nodes={nodes}
-                  onAdd={onAdd}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                />
-              </div>
+              <WorkflowNode
+                key={childId}
+                id={childId}
+                nodes={nodes}
+                onAdd={onAdd}
+                onDelete={onDelete}
+                onEdit={onEdit}
+              />
             ))}
           </div>
         </>
